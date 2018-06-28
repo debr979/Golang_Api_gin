@@ -29,7 +29,7 @@ func UserAction(param1 string, param2 map[string]string, actionID int) string {
 			return err.Error()
 		}
 		defer sqlCmd.Close()
-		pwd,_ := param2["PWD"]
+		pwd, _ := param2["PWD"]
 		res, err := sqlCmd.Exec(param1, pwd)
 		if err != nil {
 
@@ -43,8 +43,8 @@ func UserAction(param1 string, param2 map[string]string, actionID int) string {
 
 		return "REGISTER_SUCCESS"
 	case 1: //Login
-		pwd,_ := param2["PWD"]
-		rows, err := db.Query("SELECT * FROM UserInf WHERE UID=? AND password=?", param1,pwd)
+		pwd, _ := param2["PWD"]
+		rows, err := db.Query("SELECT * FROM UserInf WHERE UID=? AND password=?", param1, pwd)
 		if err != nil {
 			return err.Error()
 		}
@@ -65,7 +65,7 @@ func UserAction(param1 string, param2 map[string]string, actionID int) string {
 		if err != nil {
 			return err.Error()
 		}
-		uid,_ := param2["UID"]
+		uid, _ := param2["UID"]
 		res, err := sqlCmd.Exec(uid)
 		if err != nil {
 			return err.Error()
@@ -82,9 +82,9 @@ func UserAction(param1 string, param2 map[string]string, actionID int) string {
 		if err != nil {
 			return err.Error()
 		}
-		pwd1,_ := param2["PWD"]
-		pwd2,_ := param2["TOCHANGE"]
-		res, err := sqlCmd.Exec(pwd2,param1,pwd1)
+		pwd1, _ := param2["PWD"]
+		pwd2, _ := param2["TOCHANGE"]
+		res, err := sqlCmd.Exec(pwd2, param1, pwd1)
 		if err != nil {
 			return err.Error()
 		}
@@ -97,4 +97,36 @@ func UserAction(param1 string, param2 map[string]string, actionID int) string {
 	}
 
 	return ""
+}
+
+func DbControl(data map[string]interface{}) string {
+
+	connectionString := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?allowNativePasswords=true", userName, password, host, dbName)
+	db, err := sql.Open("mysql", connectionString)
+	if err != nil {
+		return err.Error()
+	}
+	defer db.Close()
+	actID, _ := data["actID"].(int)
+
+	switch actID {
+	case 0:
+		UID := data["account"].(string)
+		rows, err := db.Query("SELECT password FROM UserInf WHERE UID=?", UID)
+		if err != nil {
+			return err.Error()
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var passwordx string
+			if err := rows.Scan(&passwordx); err != nil {
+				return err.Error()
+			}
+			return passwordx
+		}
+	case 1:
+		break
+
+	}
+	return "NO_DATA"
 }

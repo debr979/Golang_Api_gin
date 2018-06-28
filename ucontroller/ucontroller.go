@@ -3,17 +3,16 @@ package ucontroller
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
 	m "mysqlProc"
 	"strings"
 )
 
 type usrMsg struct {
-	UID   string `json:"uid"`
-	PWD   string `json:"pwd"`
-	UNAME string `json:"uname"`
-	AGE   int    `json:"age"`
-	EMAIL string `json:"email"`
+	UID      string `form:"uid" json:"uid"`
+	PWD      string `form:"pwd" json:"pwd"`
+	UNAME    string `json:"uname"`
+	AGE      int    `json:"age"`
+	EMAIL    string `json:"email"`
 	TOCHANGE string `json:"tochange"`
 }
 
@@ -24,7 +23,7 @@ func cJson(c *gin.Context, code int, r string) {
 	c.JSON(code, gin.H{"Status": r})
 
 }
-func jsonTurn(c *gin.Context, i interface{}) {
+func JsonTurn(c *gin.Context, i interface{}) {
 	//解析JSON格式，傳入C與介面格式
 	buf := make([]byte, 1024)
 	j, _ := c.Request.Body.Read(buf)
@@ -43,10 +42,10 @@ func Register(c *gin.Context) {
 		msg.UID = c.PostForm("UID")
 		msg.PWD = c.PostForm("PWD")
 	} else if strings.Contains(conType, "json") {
-		jsonTurn(c, &msg)
+		JsonTurn(c, &msg)
 	}
 	if msg.UID != "" && msg.PWD != "" {
-		pwd := map[string]string{"PWD":msg.PWD}
+		pwd := map[string]string{"PWD": msg.PWD}
 		check := m.UserAction(msg.UID, pwd, 0)
 
 		if strings.Contains(check, "PRIMARY") {
@@ -66,10 +65,10 @@ func Login(c *gin.Context) {
 		msg.UID = c.PostForm("UID")
 		msg.PWD = c.PostForm("PWD")
 	} else if strings.Contains(conType, "json") {
-		jsonTurn(c, &msg)
+		JsonTurn(c, &msg)
 	}
 	if msg.UID != "" && msg.PWD != "" {
-		pwd := map[string]string{"PWD":msg.PWD}
+		pwd := map[string]string{"PWD": msg.PWD}
 		check := m.UserAction(msg.UID, pwd, 1)
 		if check != "" {
 			cJson(c, 200, "登入成功")
@@ -84,7 +83,7 @@ func Login(c *gin.Context) {
 
 func Delete(c *gin.Context) {
 	p1 := c.Param("action")
-	p2 := map[string]string{"UID":c.Param("param")}
+	p2 := map[string]string{"UID": c.Param("param")}
 	delResult := m.UserAction(p1, p2, 2)
 	cJson(c, 200, delResult)
 }
@@ -97,14 +96,23 @@ func Update(c *gin.Context) {
 		msg.PWD = c.PostForm("PWD")
 		msg.TOCHANGE = c.PostForm("TOCHANGE")
 	} else if strings.Contains(contype, "json") {
-		jsonTurn(c, &msg)
+		JsonTurn(c, &msg)
 	}
 
 	passwd := map[string]string{
-		"PWD":msg.PWD,
-		"TOCHANGE":msg.TOCHANGE,
+		"PWD":      msg.PWD,
+		"TOCHANGE": msg.TOCHANGE,
 	}
-	udResult := m.UserAction(msg.UID,passwd,3)
+	udResult := m.UserAction(msg.UID, passwd, 3)
 	cJson(c, 200, udResult)
 }
-func Get(c *gin.Context) {}
+func Get(c *gin.Context) {
+	c.Header("content-type", "application/json")
+	data := map[string]interface{}{
+		"account": c.Param("account"),
+		"actID":   0,
+	}
+	res := m.DbControl(data)
+	cJson(c, 200, res)
+
+}
