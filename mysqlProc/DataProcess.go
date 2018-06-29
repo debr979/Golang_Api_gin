@@ -8,8 +8,8 @@ import (
 
 const (
 	userName = "debr979"
-	password = "sd958969"
-	host     = "35.198.205.115"
+	password = "xxxxxxx"
+	host     = "127.0.0.1"
 	dbName   = "twStock"
 )
 
